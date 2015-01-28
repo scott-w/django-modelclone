@@ -6,6 +6,9 @@ class Post(models.Model):
     content = models.TextField(blank=True)
     tags = models.ManyToManyField('Tag', blank=True)
 
+    class Meta:
+        app_label = 'posts'
+
     def __unicode__(self):
         return u'Post: {0}'.format(self.title)
 
@@ -15,12 +18,18 @@ class Comment(models.Model):
     author = models.CharField(max_length=256)
     content = models.TextField()
 
+    class Meta:
+        app_label = 'posts'
+
     def __unicode__(self):
         return u'Comment on {0} by {1}'.format(self.post, self.author)
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=50)
+
+    class Meta:
+        app_label = 'posts'
 
     def __unicode__(self):
         return self.name
@@ -30,6 +39,9 @@ class Multimedia(models.Model):
     title = models.CharField(max_length=256)
     image = models.ImageField(upload_to='images', blank=True)
     document = models.FileField(upload_to='documents', blank=True)
+
+    class Meta:
+        app_label = 'posts'
 
     def __unicode__(self):
         msg = [self.title]

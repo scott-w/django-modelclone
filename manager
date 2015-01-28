@@ -13,22 +13,37 @@ shell = functools.partial(subprocess.call, shell=True)
 
 def django_environ(testing=False):
 
-    def decorator(func):
+    def _uses_appconfig():
+        from decimal import Decimal
+        from django import get_version
+        return Decimal(get_version()[:3]) >= Decimal('1.7')
 
+    def decorator(func):
         settings_module = 'sampleproject.settings'
         if testing:
             settings_module += '_testing'
 
         def setup_environ():
+            from decimal import Decimal
+            from django import get_version
+
             sys.path.insert(0, 'sampleproject')
             os.environ['DJANGO_SETTINGS_MODULE'] = settings_module
             print('Using settings: {0}'.format(settings_module))
 
-        def create_database():
-            from django.core.management import call_command
-            from django.contrib.auth.models import User
+            if _uses_appconfig():
+                from django import setup
+                setup()
 
-            call_command('syncdb', interactive=False)
+        def create_database():
+            from django import get_version
+            from django.contrib.auth.models import User
+            from django.core.management import call_command
+
+            if _uses_appconfig():
+                call_command('migrate', interactive=False)
+            else:
+                call_command('syncdb', interactive=False)
 
             admin, created = User.objects.get_or_create(
                 username='admin',
@@ -75,6 +90,7 @@ def cleanup():
     shell('find . -name __pycache__ -delete')
     shell('find . -name db_test.sqlite -delete')
 
+
 def help():
     '''Show help message and exit'''
     print('Available tasks: \n')
@@ -82,7 +98,9 @@ def help():
         print(' - {0}: {1}'.format(task.__name__, task.__doc__), file=sys.stderr)
     print()
 
+
 tasks = test, serve, cleanup, help
+
 
 if __name__ == '__main__':
     try:
